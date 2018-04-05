@@ -247,9 +247,9 @@ $('#btn4').click(function () {
     //colorSetup();
     console.log(dataURL);
     uploadImage(dataURL);
-    // setTimeout(function() {
-    //     location.href = "pixi.html";
-    // }, 3000)
+    setTimeout(function() {
+         location.href = "pixi.html";
+    }, 3000)
 });
 
 function uploadImage(url) {

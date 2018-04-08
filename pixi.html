@@ -140,12 +140,13 @@
             updates['/blends/' + newPostKey] = imgData;
             firebase.database().ref().update(updates);
         });
+        location.href = "index.html/#gallery"
     });
 
     function startPixi() {
         console.clear();
-        var width = $(window).width() - 100;
-        var height = $(window).height() - 100;
+        var width = document.documentElement.clientWidth - 100;
+        var height = document.documentElement.clientheight - 100;
 
         console.log(width + ' ' + height);
         var app = new PIXI.Application(width, height, {

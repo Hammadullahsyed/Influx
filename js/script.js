@@ -11,19 +11,42 @@ $(document).ready(function () {
     };
     firebase.initializeApp(config);
     console.log(firebase);
+
+    $('#myCanvas').css({
+        'width': document.documentElement.clientWidth - 100,
+        'height': document.documentElement.clientHeight - 350
+    })
 });
 var num = 1;
 var canvas = document.getElementById('spec');
 var ctx = canvas.getContext('2d');
-ctx.canvas.width = document.documentElement.clientWidth;
+ctx.canvas.width = document.documentElement.clientWidth-100;
 ctx.canvas.height = "50";
 var dataURL;
 
 // create an image object and get it’s source
 var imgg = new Image();
+var sc_wd;
+var sc_hg;
 
+if(document.documentElement.clientWidth <= 768){
+    sc_wd = 0.5;
+    sc_hg = 0.5;
+} else if(document.documentElement.clientWidth <= 1024){
+    sc_wd = 0.75;
+    sc_hg = 0.75;
+} else if(document.documentElement.clientWidth <= 1440){
+    sc_wd = 1;
+    sc_hg = 1;
+} else if(document.documentElement.clientWidth > 1900){
+    sc_wd = 2;
+    sc_hg = 2;
+}
+
+console.log(sc_wd + " " + sc_hg);
 // copy the image to the canvas
 $(imgg).load(function () {
+    ctx.scale(sc_wd,sc_hg);
     ctx.drawImage(imgg, 0, 0);
     $('.go').hide();
 });

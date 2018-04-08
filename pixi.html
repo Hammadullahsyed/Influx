@@ -31,89 +31,192 @@
         #myCanvas {
             border: 2px solid white;
         }
+
+        .saveIt {
+            border: 1px solid #f40000;
+            background-color: white;
+            color: black;
+            margin: 0em 12em;
+            padding: 1em 4em;
+            font-size: 1vw;
+        }
     </style>
 </head>
 
 <body>
     <canvas id="myCanvas"></canvas>
+    <button class="saveIt">Save It</button>
 </body>
 <script src="https://apis.google.com/js/api.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.5.1/pixi.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+
 <script>
-    console.clear();
-    var width = $(window).width() - 100;
-    var height = $(window).height() - 100;
+    var uri;
 
-    console.log(width + ' ' + height);
-    var app = new PIXI.Application(width, height, {
-        autoStart: false,
-        backgroundColor: 0x000000,
-        view: myCanvas
+    function guid() {
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    }
+
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+
+    $(document).ready(function () {
+        var config = {
+            apiKey: "AIzaSyCQpVICGzXMlpn6LyYFY9RKF6L4OFc1v8w",
+            authDomain: "influxapp-441d9.firebaseapp.com",
+            databaseURL: "https://influxapp-441d9.firebaseio.com",
+            projectId: "influxapp-441d9",
+            storageBucket: "influxapp-441d9.appspot.com",
+            messagingSenderId: "348490407315"
+        };
+        firebase.initializeApp(config);
+        console.log(firebase);
+
+        var recentRef = firebase.database().ref('/images/');
+        recentRef.orderByChild("create_date").limitToLast(1).on("child_added", function (snapshot) {
+            // This will be called exactly two times (unless there are less than two
+            // dinosaurs in the Database).
+
+            // It will also get fired again if one of the first two dinosaurs is
+            // removed from the data set, as a new dinosaur will now be the second
+            // shortest.
+            console.log(snapshot.val().img_uri);
+            uri = snapshot.val().img_uri;
+        });
+
+        setTimeout(function () {
+            startPixi();
+        }, 3000);
+    });
+    var i = 1;
+    $('.saveIt').click(function () {
+
+        var c = document.getElementById('myCanvas');
+        var url = c.toDataURL("image/png").replace("image/png", "image/base64");
+        var d = new Date();
+        var index = guid();
+        var storageRef = firebase.storage().ref('blends/pic ' + index + ".jpg");
+       
+        //upload file
+        var uploadTask = storageRef.putString(url, 'data_url');
+
+        //handling callbacks
+        uploadTask.on('state_changed', function (snapshot) {
+            // Observe state change events such as progress, pause, and resume
+            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log('Upload is ' + progress + '% done');
+            switch (snapshot.state) {
+                case firebase.storage.TaskState.PAUSED: // or 'paused'
+                    console.log('Upload is paused');
+                    break;
+                case firebase.storage.TaskState.RUNNING: // or 'running'
+                    console.log('Upload is running');
+                    break;
+            }
+        }, function (error) {
+            // Handle unsuccessful uploads
+            console.log(error);
+        }, function () {
+            // Handle successful uploads on complete
+            // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+            uri = uploadTask.snapshot.downloadURL;
+            var d = new Date();
+
+            var imgData = {
+                name: 'blend',
+                create_date: d,
+                img_uri: uri
+            }
+
+            var newPostKey = firebase.database().ref().child('blends/').push().key;
+            var updates = {};
+            updates['/blends/' + newPostKey] = imgData;
+            firebase.database().ref().update(updates);
+        });
     });
 
-    var rt = [];
-    for (var i = 0; i < 3; i++) rt.push(PIXI.RenderTexture.create(app.screen.width, app.screen.height));
-    var current = 0;
+    function startPixi() {
+        console.clear();
+        var width = $(window).width() - 100;
+        var height = $(window).height() - 100;
 
-    var bg, brush, displacementFilter;
+        console.log(width + ' ' + height);
+        var app = new PIXI.Application(width, height, {
+            autoStart: false,
+            backgroundColor: 0x000000,
+            view: myCanvas
+        });
 
-    var container = new PIXI.Container();
-    app.stage.addChild(container);
+        var rt = [];
+        for (var i = 0; i < 3; i++) rt.push(PIXI.RenderTexture.create(app.screen.width, app.screen.height));
+        var current = 0;
 
-    app.loader.add('bg', 'https://preview.ibb.co/hZ00k7/color_2.png');
-    app.loader.add('one', 'maps/greyMap2.png');
-    app.loader.load(function (loader, resources) {
-        var tempBg = new PIXI.Sprite(resources.bg.texture);
-        tempBg.width = app.screen.width;
-        tempBg.height = app.screen.height;
-        console.log(app.screen.width + "--" +app.screen.height);
-        app.renderer.render(tempBg, rt[0]);
-        bg = new PIXI.Sprite(rt[0]);
+        var bg, brush, displacementFilter;
 
-        brush = new PIXI.Sprite(resources.one.texture);
-        brush.anchor.set(0.5);
-        displacementFilter = new PIXI.filters.DisplacementFilter(brush);
-        container.filters = [displacementFilter];
-        displacementFilter.scale.x = 10;
-        displacementFilter.scale.y = 10;
+        var container = new PIXI.Container();
+        app.stage.addChild(container);
 
-        container.addChild(bg, brush);
+        app.loader.add('bg', uri);
+        app.loader.add('one', 'maps/greyMap.png');
+        app.loader.load(function (loader, resources) {
+            var tempBg = new PIXI.Sprite(resources.bg.texture);
+            tempBg.width = app.screen.width;
+            tempBg.height = app.screen.height;
+            console.log(app.screen.width + "--" + app.screen.height);
+            app.renderer.render(tempBg, rt[0]);
+            bg = new PIXI.Sprite(rt[0]);
 
-        app.stage.interactive = true;
+            brush = new PIXI.Sprite(resources.one.texture);
+            brush.anchor.set(0.5);
+            displacementFilter = new PIXI.filters.DisplacementFilter(brush);
+            container.filters = [displacementFilter];
+            displacementFilter.scale.x = 10;
+            displacementFilter.scale.y = 10;
 
-        app.stage.on('pointerdown', onPointerDown)
-            .on('pointerup', onPointerUp)
-            .on('pointermove', onPointerMove);
+            container.addChild(bg, brush);
 
-        app.start();
-    });
+            app.stage.interactive = true;
 
-    function snap(event) {
-        app.renderer.render(app.stage, rt[2 - current]);
-        bg.texture = rt[2 - current];
-        current = 2 - current;
-    }
+            app.stage.on('pointerdown', onPointerDown)
+                .on('pointerup', onPointerUp)
+                .on('pointermove', onPointerMove);
 
-    var dragging = false;
+            app.start();
+        });
 
-    function onPointerDown(event) {
-        dragging = true;
-        onPointerMove(event);
-    }
+        function snap(event) {
+            app.renderer.render(app.stage, rt[2 - current]);
+            bg.texture = rt[2 - current];
+            current = 2 - current;
+        }
 
-    function onPointerMove(event) {
-        const x = event.data.global.x;
-        const y = event.data.global.y;
-        displacementFilter.scale.x = Math.atan(x - brush.x) * 130;
-        displacementFilter.scale.y = Math.atan(y - brush.y) * 130;
+        var dragging = false;
 
-        brush.position.copy(event.data.global);
-        if (dragging) snap(event);
-    }
+        function onPointerDown(event) {
+            dragging = true;
+            onPointerMove(event);
+        }
 
-    function onPointerUp() {
-        dragging = false;
+        function onPointerMove(event) {
+            const x = event.data.global.x;
+            const y = event.data.global.y;
+            displacementFilter.scale.x = Math.atan(x - brush.x) * 130;
+            displacementFilter.scale.y = Math.atan(y - brush.y) * 130;
+
+            brush.position.copy(event.data.global);
+            if (dragging) snap(event);
+        }
+
+        function onPointerUp() {
+            dragging = false;
+        }
     }
 </script>
 

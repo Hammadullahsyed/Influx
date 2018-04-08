@@ -1,3 +1,17 @@
+// Initialize Firebase
+//ar firebase = require("firebase");
+$(document).ready(function () {
+    var config = {
+        apiKey: "AIzaSyCQpVICGzXMlpn6LyYFY9RKF6L4OFc1v8w",
+        authDomain: "influxapp-441d9.firebaseapp.com",
+        databaseURL: "https://influxapp-441d9.firebaseio.com",
+        projectId: "influxapp-441d9",
+        storageBucket: "influxapp-441d9.appspot.com",
+        messagingSenderId: "348490407315"
+    };
+    firebase.initializeApp(config);
+    console.log(firebase);
+});
 var num = 1;
 var canvas = document.getElementById('spec');
 var ctx = canvas.getContext('2d');
@@ -247,161 +261,68 @@ $('#btn4').click(function () {
     //colorSetup();
     console.log(dataURL);
     uploadImage(dataURL);
-    // setTimeout(function() {
-    //     location.href = "pixi.html";
-    // }, 3000)
+    setTimeout(function () {
+        location.href = "pixi.html";
+    }, 3000)
 });
 
-function uploadImage(url) {
-    function start() {
-        console.log('google init');
-        // Initializes the client with the API key and the Translate API.
-        gapi.client.init({
-            'apiKey': 'AIzaSyCytP9chhhrTLLwoTb4BYTIusBgE5xlvoM',
-            'discoveryDocs': ['https://www.googleapis.com/discovery/v1/apis/drive/v2/rest'],
-        }).then(function (response) {
-            console.log(response);
-        }, function (reason) {
-            console.log('Error: ' + reason.result.error.message);
-        });
-    };
-
-    // Loads the JavaScript client library and invokes `start` afterwards.
-    gapi.load('client', start);
+function guid() {
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+        s4() + '-' + s4() + s4() + s4();
 }
 
-//sketch.js
-
-// var COLOURS = [];
-
-// function colorSetup() {
-//     for (var i = 1; i < num; i++) {
-//         var color = $(".box" + i).attr('id');
-//         var colour = w3color(color);
-//         colour = colour.toHexString();
-//         COLOURS[i] = colour;
-//         if(i > num){
-//             color = $(".box"+num-1).attr('id');
-//             var colour = w3color(color);
-//             colour = colour.toHexString();
-//             COLOURS[num] = colour;
-//         }
-//     }
-
-//     for (var i = 1; i < num; i++) {
-//         console.log('--' + COLOURS[i]);
-//     }
-// }
-
-// var radius = 0;
-// Sketch.create({
-//     fullscreen: false,
-//     height: 450,
-//     width: 1225,
-//     container: document.getElementById('canv'),
-//     autoclear: false,
-//     retina: 'auto',
-//     setup: function () {
-//         console.log('setup');
-//     },
-//     update: function () {
-//         radius = 2 + abs(sin(this.millis * 0.003) * 50);
-//     },
-//     // Event handlers
-//     keydown: function () {
-//         if (this.keys.C) this.clear();
-//     },
-//     // Mouse & touch events are merged, so handling touch events by default
-//     // and powering sketches using the touches array is recommended for easy
-//     // scalability. If you only need to handle the mouse / desktop browsers,
-//     // use the 0th touch element and you get wider device support for free.
-//     touchmove: function () {
-//         for (var i = this.touches.length - 1, touch; i >= 0; i--) {
-//             touch = this.touches[i];
-//             this.lineCap = 'round';
-//             this.lineJoin = 'round';
-//             this.fillStyle = this.strokeStyle = COLOURS[i % COLOURS.length];
-//             this.lineWidth = radius;
-//             this.beginPath();
-//             this.moveTo(touch.ox, touch.oy);
-//             this.lineTo(touch.x, touch.y);
-//             this.stroke();
-//         }
-//     }
-// });
+function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+}
 
 
-// pixi.js
-// import * as PIXI from 'pixi.js';
+var i = 1;
 
-// console.clear();
+function uploadImage(url) {
+    //get file and in my case its DataURL
+    var file = url;
+    var uri;
+    var index = guid();
+    //create storage ref
+    var storageRef = firebase.storage().ref('gallery/pic ' + index +".jpg");
 
-// var app = new PIXI.Application(1225, 450, {
-//     autoStart: false,
-//     backgroundColor: 0x000000,
-//     view: myCanvas
-// });
+    //upload file
+    var uploadTask = storageRef.putString(file, 'data_url');
 
-// var rt = [];
-// for (var i = 0; i < 3; i++) rt.push(PIXI.RenderTexture.create(app.screen.width, app.screen.height));
-// var current = 0;
+    //handling callbacks
+    uploadTask.on('state_changed', function (snapshot) {
+        // Observe state change events such as progress, pause, and resume
+        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+        var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+        switch (snapshot.state) {
+            case firebase.storage.TaskState.PAUSED: // or 'paused'
+                console.log('Upload is paused');
+                break;
+            case firebase.storage.TaskState.RUNNING: // or 'running'
+                console.log('Upload is running');
+                break;
+        }
+    }, function (error) {
+        // Handle unsuccessful uploads
+        console.log(error);
+    }, function () {
+        // Handle successful uploads on complete
+        // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+        uri = uploadTask.snapshot.downloadURL;
+        var d = new Date();
 
-// var bg, brush, displacementFilter;
+        var imgData = {
+            name: 'pic',
+            create_date: d,
+            img_uri: uri
+        }
 
-// var container = new PIXI.Container();
-// app.stage.addChild(container);
-
-// app.loader.add('bg', dataURL);
-// app.loader.add('one', 'https://raw.githubusercontent.com/PavelLaptev/test-rep/master/dis-varOne.png');
-// app.loader.load(function (loader, resources) {
-//     var tempBg = new PIXI.Sprite(resources.bg.texture);
-//     tempBg.width = app.screen.width;
-//     tempBg.height = app.screen.height;
-
-//     app.renderer.render(tempBg, rt[0]);
-//     bg = new PIXI.Sprite(rt[0]);
-
-//     brush = new PIXI.Sprite(resources.one.texture);
-//     brush.anchor.set(0.5);
-//     displacementFilter = new PIXI.filters.DisplacementFilter(brush);
-//     container.filters = [displacementFilter];
-//     displacementFilter.scale.x = 10;
-//     displacementFilter.scale.y = 10;
-
-//     container.addChild(bg, brush);
-
-//     app.stage.interactive = true;
-
-//     app.stage.on('pointerdown', onPointerDown)
-//         .on('pointerup', onPointerUp)
-//         .on('pointermove', onPointerMove);
-
-//     app.start();
-// });
-
-// function snap(event) {
-//     app.renderer.render(app.stage, rt[2 - current]);
-//     bg.texture = rt[2 - current];
-//     current = 2 - current;
-// }
-
-// var dragging = false;
-
-// function onPointerDown(event) {
-//     dragging = true;
-//     onPointerMove(event);
-// }
-
-// function onPointerMove(event) {
-//     const x = event.data.global.x;
-//     const y = event.data.global.y;
-//     displacementFilter.scale.x = Math.atan(x - brush.x) * 4;
-//     displacementFilter.scale.y = Math.atan(y - brush.y) * 4;
-
-//     brush.position.copy(event.data.global);
-//     if (dragging) snap(event);
-// }
-
-// function onPointerUp() {
-//     dragging = false;
-// }
+        var newPostKey = firebase.database().ref().child('images/').push().key;
+        var updates = {};
+        updates['/images/' + newPostKey] = imgData;
+        firebase.database().ref().update(updates);
+    });
+}

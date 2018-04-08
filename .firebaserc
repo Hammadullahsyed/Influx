@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "influxapp-441d9",
+    "testing": "influxapp-441d9"
+  }
+}

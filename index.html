@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        body{
+        body {
             overflow-y: auto;
         }
     </style>
@@ -44,9 +44,66 @@
 
     <div class="sec" id="gallery">
         <h1>Gallery coming soon...</h1>
+        <div class="imgBoxes">
+            <div class="boxx1">
+                <img class="blendImg" src="" alt="Blended Image">
+                <div class="date"></div>
+            </div>
+            <div class="boxx2">
+                <img class="blendImg" src="" alt="Blended Image">
+                <div class="date"></div>
+            </div>
+            <div class="boxx3">
+                <img class="blendImg" src="" alt="Blended Image">
+                <div class="date"></div>
+            </div>
+            <div class="boxx4">
+                <img class="blendImg" src="" alt="Blended Image">
+                <div class="date"></div>
+            </div>
+            <div class="boxx5">
+                <img class="blendImg" src="" alt="Blended Image">
+                <div class="date"></div>
+            </div>
+            <div class="boxx6">
+                <img class="blendImg" src="" alt="Blended Image">
+                <div class="date"></div>
+            </div>
+        </div>
     </div>
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
     <script src="https://use.fontawesome.com/bd8d2b644e.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+    <script>
+        $(document).ready(function () {
+            var config = {
+                apiKey: "AIzaSyCQpVICGzXMlpn6LyYFY9RKF6L4OFc1v8w",
+                authDomain: "influxapp-441d9.firebaseapp.com",
+                databaseURL: "https://influxapp-441d9.firebaseio.com",
+                projectId: "influxapp-441d9",
+                storageBucket: "influxapp-441d9.appspot.com",
+                messagingSenderId: "348490407315"
+            };
+            firebase.initializeApp(config);
+            console.log(firebase);
+
+
+            var i = 1;
+            var ref = firebase.database().ref('/blends/');
+            ref.once('value', function (snapshot) {
+                snapshot.forEach(function (childSnapshot) {
+                    var childData = childSnapshot.val();
+                    if (i <= 6) {
+                        $('.boxx' + i).children('.blendImg').attr("src", childData.img_uri);
+                        $('.boxx' + i).children('.date').text(childData.create_date);
+                    }
+                    console.log($('.boxx'+i).children('.blendImg'));
+                    i++;
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

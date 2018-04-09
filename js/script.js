@@ -14,7 +14,7 @@ $(document).ready(function () {
 
     $('#myCanvas').css({
         'width': document.documentElement.clientWidth - 100,
-        'height': document.documentElement.clientHeight - 350
+        'height': document.documentElement.clientHeight - 500
     })
 });
 var num = 1;

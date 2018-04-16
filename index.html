@@ -40,10 +40,15 @@
 
     <div class="sec" id="about">
         <h1>About coming soon...</h1>
+        <p> Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor impedit facere quisquam a placeat nobis laudantium
+            ipsum laborum explicabo qui! Qui reiciendis ab provident nostrum reprehenderit officia, dicta minus odit.
+            <br/> <br/>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Soluta deserunt similique tempora in explicabo est
+            ipsam incidunt quidem perspiciatis! Recusandae dolorum nobis itaque ratione quaerat, optio voluptatum asperiores
+            facere error?</p>
     </div>
 
     <div class="sec" id="gallery">
-        <h1>Gallery coming soon...</h1>
+        <h1>Gallery</h1>
         <div class="imgBoxes">
             <div class="boxx1">
                 <img class="blendImg" src="" alt="Blended Image">
@@ -89,17 +94,24 @@
             console.log(firebase);
 
 
+            var arr = [];
             var i = 1;
+            var j = 0;
             var ref = firebase.database().ref('/blends/');
             ref.once('value', function (snapshot) {
+                var index = snapshot.numChildren() - 1;
+                var stopNum = index - 6;
                 snapshot.forEach(function (childSnapshot) {
                     var childData = childSnapshot.val();
-                    if (i <= 6) {
+                    //console.log(childData);
+                    if (j <= index && j >= stopNum) {
                         $('.boxx' + i).children('.blendImg').attr("src", childData.img_uri);
                         $('.boxx' + i).children('.date').text(childData.create_date);
+                        console.log($('.boxx' + i).children('.blendImg'));
+                        i++;
                     }
-                    console.log($('.boxx'+i).children('.blendImg'));
-                    i++;
+                    j++;
+                    console.log('i: ' + i + "j: " + j);
                 });
             });
         });
